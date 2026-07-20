@@ -1,0 +1,12 @@
+{
+    "id": "CardBeautify",
+    "name": "Card Beautify",
+    "author": "CapePisces, Yummn, Aduare, FlyingFish, Diana111",
+    "description": "Visual-only card portrait replacement with per-card art pack selection. v0.4.9 uses one Android-safe portrait detour and a lightweight encyclopedia watcher instead of unstable NCard finalizer detours; selections persist across launches.",
+    "version": "v0.4.9",
+    "min_game_version": "0.103.2",
+    "has_pck": false,
+    "has_dll": true,
+    "dependencies": [],
+    "affects_gameplay": false
+}

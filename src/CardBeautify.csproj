@@ -1,0 +1,45 @@
+﻿<Project Sdk="Godot.NET.Sdk/4.5.1" InitialTargets="CheckDependencyPaths">
+  <Import Project=".\Sts2PathDiscovery.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>CardBeautify</RootNamespace>
+    <AssemblyName>CardBeautify</AssemblyName>
+    <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
+    <PathMap>$(AppOutputBase)=.\</PathMap>
+    <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
+    <NoWarn>$(NoWarn);MSB3270</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(Sts2DataDir)')">
+    <Reference Include="0Harmony"><HintPath>$(Sts2DataDir)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="sts2"><HintPath>$(Sts2DataDir)/sts2.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="CardBeautifyCode\**\*.cs" />
+    <None Include="CardBeautify.json" />
+    <None Include="project.godot" />
+    <None Include="CardBeautifyAssets.pck" Condition="Exists('CardBeautifyAssets.pck')" />
+    <None Include="Data\**\*" Condition="Exists('Data')" />
+  </ItemGroup>
+
+  <Target Name="CheckDependencyPaths">
+    <Error Text="Slay the Spire 2 data not found at path '$(Sts2DataDir)'." Condition="'$(Sts2DataDir)' == '' or !Exists('$(Sts2DataDir)')" />
+  </Target>
+
+  <Target Name="CopyToModsFolderOnBuild" AfterTargets="Build" Condition="Exists('$(Sts2Path)') and '$(SkipCopyToMods)' != 'true'">
+    <Message Text="Copying CardBeautify files to $(ModsPath)CardBeautify/" Importance="high" />
+    <MakeDir Directories="$(ModsPath)CardBeautify/Data" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsPath)CardBeautify/" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModsPath)CardBeautify/" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Copy SourceFiles="CardBeautify.json" DestinationFolder="$(ModsPath)CardBeautify/" />
+    <Copy SourceFiles="CardBeautifyAssets.pck" DestinationFolder="$(ModsPath)CardBeautify/" Condition="Exists('CardBeautifyAssets.pck')" />
+    <Copy SourceFiles="@(None->WithMetadataValue('RecursiveDir','Data\'))" DestinationFolder="$(ModsPath)CardBeautify/Data/" Condition="false" />
+    <Copy SourceFiles="Data\CardBeautifyCatalog.catalog" DestinationFolder="$(ModsPath)CardBeautify/Data/" Condition="Exists('Data\CardBeautifyCatalog.catalog')" />
+  </Target>
+</Project>

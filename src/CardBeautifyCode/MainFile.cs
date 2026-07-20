@@ -1,0 +1,26 @@
+using Godot;
+using HarmonyLib;
+using MegaCrit.Sts2.Core.Logging;
+using MegaCrit.Sts2.Core.Modding;
+
+namespace CardBeautify;
+
+[ModInitializer(nameof(Initialize))]
+public partial class MainFile : Node
+{
+    public const string ModId = "CardBeautify";
+    public static MegaCrit.Sts2.Core.Logging.Logger Logger { get; } = new(ModId, LogType.Generic);
+
+    public static void Initialize()
+    {
+        CardArtCatalog.MountAssets();
+        CardArtCatalog.InitializeStorage();
+        // CardModel.Portrait is the only detour required for replacing art.
+        // PatchAll previously installed six ARM64 detours, including two NCard
+        // finalizers which could abort Mono while the game was starting.
+        new Harmony(ModId).CreateClassProcessor(typeof(CardModelPortraitPatch)).Patch();
+        CardBeautifyLibraryWatcher.Install();
+        CardArtCatalog.LogCoverage();
+        Logger.Info("[CardBeautify] loaded v0.4.9: single-detour Android-safe portrait replacement enabled; encyclopedia selector uses a scene watcher; selected art persists across launches; obsolete NCard finalizer detours removed.");
+    }
+}
