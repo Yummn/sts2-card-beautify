@@ -24,6 +24,9 @@ internal static class CardNodePortraitPatch
     private static readonly FieldInfo? AncientPortraitField = typeof(NCard).GetField("_ancientPortrait", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly Dictionary<string, PortraitState> DefaultPortraitStates = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, PortraitState> DefaultAncientPortraitStates = new(StringComparer.OrdinalIgnoreCase);
+    private static ulong _lastScopeScanMsec;
+    private static ulong _lastScopeGridInstanceId;
+    private static bool _lastScopeHasOutsideCard;
 
     [HarmonyPostfix]
     [HarmonyPriority(Priority.Last)]
@@ -196,7 +199,53 @@ internal static class CardNodePortraitPatch
         try
         {
             var ownedGrid = typeof(NCardLibrary).GetField("_grid", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(library);
-            return ReferenceEquals(ownedGrid, grid);
+            return ReferenceEquals(ownedGrid, grid) && !HasVisibleCardOutsideGrid(grid);
+        }
+        catch { return false; }
+    }
+
+    // The encyclopedia detail popup leaves the library grid alive underneath
+    // an enlarged NCard. Hide every grid selector while that popup is visible.
+    private static bool HasVisibleCardOutsideGrid(NCardLibraryGrid grid)
+    {
+        try
+        {
+            var now = Time.GetTicksMsec();
+            var gridId = grid.GetInstanceId();
+            if (_lastScopeGridInstanceId == gridId && now - _lastScopeScanMsec < 100)
+                return _lastScopeHasOutsideCard;
+            if (Engine.GetMainLoop() is not SceneTree tree || tree.Root is null)
+                return false;
+
+            _lastScopeHasOutsideCard = HasVisibleCardOutsideGrid(tree.Root, grid);
+            _lastScopeGridInstanceId = gridId;
+            _lastScopeScanMsec = now;
+            return _lastScopeHasOutsideCard;
+        }
+        catch { return false; }
+    }
+
+    private static bool HasVisibleCardOutsideGrid(Node root, NCardLibraryGrid grid)
+    {
+        try
+        {
+            if (ReferenceEquals(root, grid))
+                return false;
+            if (root is NCard card && IsVisibleInTreeStrict(card))
+                return true;
+            foreach (var child in root.GetChildren())
+                if (child is Node childNode && HasVisibleCardOutsideGrid(childNode, grid))
+                    return true;
+        }
+        catch { }
+        return false;
+    }
+
+    private static bool IsVisibleInTreeStrict(Node node)
+    {
+        try
+        {
+            return node is CanvasItem item && item.IsInsideTree() && item.Visible && item.IsVisibleInTree();
         }
         catch { return false; }
     }

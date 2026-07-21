@@ -21,6 +21,6 @@ public partial class MainFile : Node
         new Harmony(ModId).CreateClassProcessor(typeof(CardModelPortraitPatch)).Patch();
         CardBeautifyLibraryWatcher.Install();
         CardArtCatalog.LogCoverage();
-        Logger.Info("[CardBeautify] loaded v0.5.0: the card-art selector is restricted to the active encyclopedia grid and removed before pooled cards enter a run; selected art persists across launches.");
+        Logger.Info("[CardBeautify] loaded v0.5.1: selectors are hidden in encyclopedia card details and remain limited to the active encyclopedia grid; selected art persists across launches.");
     }
 }

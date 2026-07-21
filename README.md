@@ -1,4 +1,4 @@
-﻿# CardBeautify / 卡面美化
+# CardBeautify / 卡面美化
 
 《Slay the Spire 2 / 杀戮尖塔2》卡牌立绘替换 MOD，提供适合手机触控的百科大全卡面切换按钮，并持久保存每张卡上次选择的卡面。
 
