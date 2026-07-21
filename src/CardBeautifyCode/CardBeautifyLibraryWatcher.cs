@@ -15,6 +15,7 @@ internal sealed partial class CardBeautifyLibraryWatcher : Node
     private double _elapsed;
     private NCardLibrary? _library;
     private bool _loggedVisibleLibrary;
+    private bool _wasInLibrary;
 
     public static void Install()
     {
@@ -29,12 +30,27 @@ internal sealed partial class CardBeautifyLibraryWatcher : Node
         _elapsed += delta;
         if (_elapsed < PollInterval) return;
         _elapsed = 0;
-        if (!GodotObject.IsInstanceValid(_library) || !_library!.IsVisibleInTree())
-        {
-            _library = FindVisibleLibrary(GetTree()?.Root);
+        var tree = GetTree();
+        var visibleLibrary = FindVisibleLibrary(tree?.CurrentScene);
+        if (!ReferenceEquals(visibleLibrary, _library))
             _loggedVisibleLibrary = false;
+        _library = visibleLibrary;
+
+        if (!GodotObject.IsInstanceValid(_library))
+        {
+            if (_wasInLibrary && tree?.Root is not null)
+            {
+                // Encyclopedia NCard nodes are pooled. Strip the selector from
+                // every old card synchronously before those nodes are reused in
+                // combat, shop, deck or pile screens.
+                CardNodePortraitPatch.CleanupAllSelectors(tree.Root);
+                MainFile.Logger.Info("[CardBeautify] encyclopedia closed; removed pooled card-art selectors.");
+            }
+            _wasInLibrary = false;
+            return;
         }
-        if (!GodotObject.IsInstanceValid(_library) || !_library!.IsVisibleInTree()) return;
+
+        _wasInLibrary = true;
         var stats = ApplyCards(_library);
         if (!_loggedVisibleLibrary && stats.Cards > 0)
         {

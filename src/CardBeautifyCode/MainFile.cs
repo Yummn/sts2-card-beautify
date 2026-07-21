@@ -21,6 +21,6 @@ public partial class MainFile : Node
         new Harmony(ModId).CreateClassProcessor(typeof(CardModelPortraitPatch)).Patch();
         CardBeautifyLibraryWatcher.Install();
         CardArtCatalog.LogCoverage();
-        Logger.Info("[CardBeautify] loaded v0.4.9: single-detour Android-safe portrait replacement enabled; encyclopedia selector uses a scene watcher; selected art persists across launches; obsolete NCard finalizer detours removed.");
+        Logger.Info("[CardBeautify] loaded v0.5.0: the card-art selector is restricted to the active encyclopedia grid and removed before pooled cards enter a run; selected art persists across launches.");
     }
 }

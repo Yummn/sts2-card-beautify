@@ -19,7 +19,7 @@ internal static class CardNodePortraitPatch
         public TextureRect.StretchModeEnum StretchMode { get; init; }
     }
 
-    private const string SelectorNodeName = "CardBeautifyPerCardSelector";
+    internal const string SelectorNodeName = "CardBeautifyPerCardSelector";
     private static readonly FieldInfo? PortraitField = typeof(NCard).GetField("_portrait", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly FieldInfo? AncientPortraitField = typeof(NCard).GetField("_ancientPortrait", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly Dictionary<string, PortraitState> DefaultPortraitStates = new(StringComparer.OrdinalIgnoreCase);
@@ -93,7 +93,7 @@ internal static class CardNodePortraitPatch
         var existing = cardNode.GetNodeOrNull<Button>(SelectorNodeName);
         if (!IsInCardLibrary(cardNode) || CardArtCatalog.GetAvailablePackIds(cardKey).Count == 0)
         {
-            existing?.QueueFree();
+            RemoveSelector(cardNode);
             return;
         }
 
@@ -175,11 +175,68 @@ internal static class CardNodePortraitPatch
 
     private static bool IsInCardLibrary(Node node)
     {
+        NCardLibrary? library = null;
+        NCardLibraryGrid? grid = null;
         for (var current = node; current != null; current = current.GetParent())
         {
-            if (current is NCardLibrary) return true;
+            if (grid is null && current is NCardLibraryGrid candidateGrid)
+                grid = candidateGrid;
+            if (current is NCardLibrary candidateLibrary)
+            {
+                library = candidateLibrary;
+                break;
+            }
         }
+
+        if (library is null || grid is null || !library.IsVisibleInTree() || !grid.IsVisibleInTree())
+            return false;
+        if (!IsUnderCurrentScene(library))
+            return false;
+
+        try
+        {
+            var ownedGrid = typeof(NCardLibrary).GetField("_grid", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(library);
+            return ReferenceEquals(ownedGrid, grid);
+        }
+        catch { return false; }
+    }
+
+    private static bool IsUnderCurrentScene(Node node)
+    {
+        try
+        {
+            if (Engine.GetMainLoop() is not SceneTree tree || tree.CurrentScene is null)
+                return false;
+            for (var current = node; current != null; current = current.GetParent())
+                if (ReferenceEquals(current, tree.CurrentScene)) return true;
+        }
+        catch { }
         return false;
+    }
+
+    internal static void RemoveSelector(NCard cardNode)
+    {
+        try
+        {
+            var selector = cardNode.GetNodeOrNull<Button>(SelectorNodeName);
+            if (selector is null || !GodotObject.IsInstanceValid(selector)) return;
+            selector.Visible = false;
+            selector.MouseFilter = Control.MouseFilterEnum.Ignore;
+            selector.QueueFree();
+        }
+        catch { }
+    }
+
+    internal static void CleanupAllSelectors(Node root)
+    {
+        try
+        {
+            if (root is NCard card)
+                RemoveSelector(card);
+            foreach (var child in root.GetChildren())
+                if (child is Node childNode) CleanupAllSelectors(childNode);
+        }
+        catch { }
     }
 
     private static void RefreshCards(Node node)
