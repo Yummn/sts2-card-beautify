@@ -1,0 +1,19 @@
+CardBeautify v0.5.2 encyclopedia-scope offline audit
+Timestamp: 2026-07-24T23:41:26+08:00
+Mode: source and binary checks only
+Passed: 12
+Failed: 0
+
+PASS
+  [OK] manifest is v0.5.2
+  [OK] watcher searches only the current scene
+  [OK] watcher tracks encyclopedia exit
+  [OK] watcher strips selectors from pooled cards
+  [OK] selector requires exact library grid ownership
+  [OK] selector requires current-scene ownership
+  [OK] selector cleanup hides before deferred free
+  [OK] recursive selector cleanup exists
+  [OK] card-detail popup invalidates selector scope
+  [OK] selector has an immediate per-node scope guard
+  [OK] scope guard disables input before freeing
+  [OK] compiled binary exists: .outmods\CardBeautify-v0.5.2\CardBeautify.dll

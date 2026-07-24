@@ -4,11 +4,15 @@
 
 ## 最新版本
 
+- [v0.5.2](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.2)：修复先打开百科大全、再进入战斗后卡牌上仍显示“卡图”按钮的问题。每个按钮现在带有自身作用域守卫：卡牌节点一旦离开当前百科大全的精确网格，首帧就先隐藏并关闭触控，再释放按钮，不再依赖较慢的全局轮询清理。REDMI K80 Pro 实测百科内按钮正常显示，返回主菜单并继续战斗后按钮完全消失；离线检查 12/12 通过。
+
+- [v0.5.1](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.1)：百科大全卡牌详情弹窗打开时隐藏卡图按钮，并保持每张卡的卡面选择持久化。
+
 - [v0.5.0](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.0)：修复打开百科大全后，卡面按钮随复用卡牌节点泄漏到战斗、商店、牌组和牌堆界面的问题。按钮现在只允许出现在当前场景中实际拥有的百科卡牌网格内；离开百科时先同步隐藏再释放。卡图替换本身仍在所有界面生效，已保存选择不会丢失。
 
 ## 安装
 
-下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `CardBeautify-v0.5.0-Mobile-v103.zip`。
+下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `CardBeautify-v0.5.2-Mobile-v103.zip`，PC v107.1 使用 `CardBeautify-v0.5.2-PC-v107.1.zip`。
 
 ## 资源来源
 

@@ -94,7 +94,7 @@ internal static class CardNodePortraitPatch
     private static void InstallOrUpdateSelector(NCard cardNode, string cardKey)
     {
         var existing = cardNode.GetNodeOrNull<Button>(SelectorNodeName);
-        if (!IsInCardLibrary(cardNode) || CardArtCatalog.GetAvailablePackIds(cardKey).Count == 0)
+        if (!IsSelectorAllowed(cardNode) || CardArtCatalog.GetAvailablePackIds(cardKey).Count == 0)
         {
             RemoveSelector(cardNode);
             return;
@@ -103,7 +103,7 @@ internal static class CardNodePortraitPatch
         var button = existing;
         if (button == null)
         {
-            button = new Button
+            button = new CardBeautifySelectorButton(cardNode)
             {
                 Name = SelectorNodeName,
                 FocusMode = Control.FocusModeEnum.None,
@@ -176,7 +176,7 @@ internal static class CardNodePortraitPatch
         return style;
     }
 
-    private static bool IsInCardLibrary(Node node)
+    internal static bool IsSelectorAllowed(Node node)
     {
         NCardLibrary? library = null;
         NCardLibraryGrid? grid = null;
@@ -293,5 +293,33 @@ internal static class CardNodePortraitPatch
         if (node is NCard card) ApplyToCard(card);
         foreach (var child in node.GetChildren()) RefreshCards(child);
         if (node is CanvasItem item) item.QueueRedraw();
+    }
+}
+
+/// <summary>
+/// Encyclopedia card nodes are pooled and may be moved directly into combat,
+/// shop and pile screens. Guard the selector on the node itself so it becomes
+/// non-interactive and is deleted on the first frame after leaving the exact
+/// encyclopedia grid, without waiting for the slower library watcher.
+/// </summary>
+internal sealed partial class CardBeautifySelectorButton : Button
+{
+    private readonly NCard _card;
+
+    internal CardBeautifySelectorButton(NCard card)
+    {
+        _card = card;
+    }
+
+    public override void _Process(double delta)
+    {
+        if (!GodotObject.IsInstanceValid(_card) ||
+            !CardNodePortraitPatch.IsSelectorAllowed(_card))
+        {
+            Visible = false;
+            MouseFilter = MouseFilterEnum.Ignore;
+            SetProcess(false);
+            QueueFree();
+        }
     }
 }

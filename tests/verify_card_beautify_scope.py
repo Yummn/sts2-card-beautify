@@ -23,7 +23,7 @@ def main() -> int:
     manifest = (PROJECT / "CardBeautify.json").read_text(encoding="utf-8")
 
     checks = {
-        "manifest is v0.5.1": '"version": "v0.5.1"' in manifest,
+        "manifest is v0.5.2": '"version": "v0.5.2"' in manifest,
         "watcher searches only the current scene": "FindVisibleLibrary(tree?.CurrentScene)" in watcher and "FindVisibleLibrary(GetTree()?.Root)" not in watcher,
         "watcher tracks encyclopedia exit": "_wasInLibrary" in watcher,
         "watcher strips selectors from pooled cards": "CleanupAllSelectors(tree.Root)" in watcher,
@@ -32,6 +32,8 @@ def main() -> int:
         "selector cleanup hides before deferred free": "selector.Visible = false" in patch and "selector.MouseFilter = Control.MouseFilterEnum.Ignore" in patch,
         "recursive selector cleanup exists": "internal static void CleanupAllSelectors(Node root)" in patch,
         "card-detail popup invalidates selector scope": "HasVisibleCardOutsideGrid(grid)" in patch and "ReferenceEquals(root, grid)" in patch and "root is NCard card && IsVisibleInTreeStrict(card)" in patch,
+        "selector has an immediate per-node scope guard": "class CardBeautifySelectorButton" in patch and "public override void _Process(double delta)" in patch and "!CardNodePortraitPatch.IsSelectorAllowed(_card)" in patch,
+        "scope guard disables input before freeing": "MouseFilter = MouseFilterEnum.Ignore" in patch and "SetProcess(false)" in patch and "QueueFree()" in patch,
     }
     for binary in args.binary:
         checks[f"compiled binary exists: {binary}"] = binary.is_file() and binary.stat().st_size > 20_000
@@ -39,7 +41,7 @@ def main() -> int:
     passed = [name for name, ok in checks.items() if ok]
     failed = [name for name, ok in checks.items() if not ok]
     lines = [
-        "CardBeautify v0.5.1 encyclopedia-scope offline audit",
+        "CardBeautify v0.5.2 encyclopedia-scope offline audit",
         f"Timestamp: {dt.datetime.now().astimezone().isoformat(timespec='seconds')}",
         "Mode: source and binary checks only",
         f"Passed: {len(passed)}",
