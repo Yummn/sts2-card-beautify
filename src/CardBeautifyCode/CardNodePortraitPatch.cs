@@ -24,7 +24,6 @@ internal static class CardNodePortraitPatch
     private static readonly FieldInfo? AncientPortraitField = typeof(NCard).GetField("_ancientPortrait", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly Dictionary<string, PortraitState> DefaultPortraitStates = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, PortraitState> DefaultAncientPortraitStates = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<ulong, Texture2D> BiasedCognitionPortraitCrops = new();
     private static ulong _lastScopeScanMsec;
     private static ulong _lastScopeGridInstanceId;
     private static bool _lastScopeHasOutsideCard;
@@ -59,43 +58,11 @@ internal static class CardNodePortraitPatch
         }
         else
         {
-            var displayTexture = GetDisplayTexture(cardKey, texture);
-            ApplyTexture(rect, displayTexture);
-            ApplyTexture(ancientRect, displayTexture);
+            ApplyTexture(rect, texture);
+            ApplyTexture(ancientRect, texture);
         }
 
         InstallOrUpdateSelector(cardNode, cardKey);
-    }
-
-    private static Texture2D GetDisplayTexture(string cardKey, Texture2D texture)
-    {
-        if (!string.Equals(cardKey, "biased_cognition", StringComparison.OrdinalIgnoreCase))
-            return texture;
-
-        var width = texture.GetWidth();
-        var height = texture.GetHeight();
-        if (width <= 0 || height <= width)
-            return texture;
-
-        var sourceId = texture.GetInstanceId();
-        if (BiasedCognitionPortraitCrops.TryGetValue(sourceId, out var cached) &&
-            GodotObject.IsInstanceValid(cached))
-            return cached;
-
-        // The replacement art is a tall illustration while the card portrait
-        // window is landscape. KeepAspectCovered used to take a centered slice
-        // and cut off the top of the character's head. Crop the upper composition
-        // first so the pendulum, hair and face all remain inside the card frame.
-        var cropHeight = MathF.Min(height, width / 1.5f);
-        var cropTop = MathF.Min(height - cropHeight, height * 0.189f);
-        var cropped = new AtlasTexture
-        {
-            Atlas = texture,
-            Region = new Rect2(0f, cropTop, width, cropHeight),
-            FilterClip = true,
-        };
-        BiasedCognitionPortraitCrops[sourceId] = cropped;
-        return cropped;
     }
 
     private static void ApplyTexture(TextureRect? rect, Texture2D texture)

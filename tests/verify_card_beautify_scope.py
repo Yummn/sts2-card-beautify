@@ -23,16 +23,12 @@ def main() -> int:
     manifest = (PROJECT / "CardBeautify.json").read_text(encoding="utf-8")
 
     checks = {
-        "manifest is v0.5.3": '"version": "v0.5.3"' in manifest,
-        "Biased Cognition has a dedicated cached crop": (
-            'string.Equals(cardKey, "biased_cognition"' in patch
-            and "BiasedCognitionPortraitCrops" in patch
-            and "new AtlasTexture" in patch
-        ),
-        "Biased Cognition crop keeps a landscape composition": (
-            "width / 1.5f" in patch
-            and "height * 0.189f" in patch
-            and "FilterClip = true" in patch
+        "manifest is v0.5.4": '"version": "v0.5.4"' in manifest,
+        "Biased Cognition keeps native vertical portrait without second crop": (
+            "BiasedCognitionPortraitCrops" not in patch
+            and "GetDisplayTexture" not in patch
+            and "new AtlasTexture" not in patch
+            and "ApplyTexture(rect, texture);" in patch
         ),
         "watcher searches only the current scene": "FindVisibleLibrary(tree?.CurrentScene)" in watcher and "FindVisibleLibrary(GetTree()?.Root)" not in watcher,
         "watcher tracks encyclopedia exit": "_wasInLibrary" in watcher,
@@ -51,7 +47,7 @@ def main() -> int:
     passed = [name for name, ok in checks.items() if ok]
     failed = [name for name, ok in checks.items() if not ok]
     lines = [
-        "CardBeautify v0.5.3 portrait-crop and encyclopedia-scope offline audit",
+        "CardBeautify v0.5.4 native-portrait and encyclopedia-scope offline audit",
         f"Timestamp: {dt.datetime.now().astimezone().isoformat(timespec='seconds')}",
         "Mode: source and binary checks only",
         f"Passed: {len(passed)}",
