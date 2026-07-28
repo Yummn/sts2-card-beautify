@@ -4,6 +4,8 @@
 
 ## 最新版本
 
+- [v0.5.5](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.5)：修复百科大全切换人物/筛选、重建卡牌行或从卡牌详情返回后，“卡图”按钮偶尔消失的问题。旧版在这些过渡帧里把暂时失去精确网格作用域的按钮直接释放；现在改为同步隐藏并禁用触控，网格恢复有效后由按钮自身立即重新显示。详情页和百科之外仍不会显示按钮。PC v107.1 已实机验证故障机器人筛选、详情隐藏和返回后约 250 ms 自动恢复；双平台离线检查 15/15 通过。
+
 - [v0.5.4](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.4)：再次检查“偏差认知”后确认，v0.5.3 把本来已经正确的 600×848 竖版原图先裁成 600×400 横图，随后卡牌控件又以 `KeepAspectCovered` 填充，形成二次放大与裁切。v0.5.4 移除这层单卡横向裁剪，直接使用原始竖版构图。PC v107.1 已在百科大全缩略图和卡牌详情中实机验证：摆锤、完整头发、面部、披肩与上半身均正常进入画面，日志确认加载 `v0.5.4`。
 
 - [v0.5.3](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.3)：修复“偏差认知”替换卡图在横向卡牌立绘窗口中被居中裁掉头顶的问题。现在仅对这张卡使用带缓存的上部横向构图裁剪，保留摆锤、头发和面部；不会改变其他卡图，也不会增加每帧重复裁剪开销。Android v103 已在百科大全中实机验证。
@@ -16,7 +18,7 @@
 
 ## 安装
 
-下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `CardBeautify-v0.5.4-Mobile-v103.zip`，PC v107.1 使用 `CardBeautify-v0.5.4-PC-v107.1.zip`。
+下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `CardBeautify-v0.5.5-Mobile-v103.zip`，PC v107.1 使用 `CardBeautify-v0.5.5-PC-v107.1.zip`。
 
 ## 资源来源
 

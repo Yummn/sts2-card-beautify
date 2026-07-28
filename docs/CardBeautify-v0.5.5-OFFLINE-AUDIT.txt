@@ -1,0 +1,22 @@
+CardBeautify v0.5.5 encyclopedia-selector lifecycle offline audit
+Timestamp: 2026-07-28T13:23:12+08:00
+Mode: source and binary checks only
+Passed: 15
+Failed: 0
+
+PASS
+  [OK] manifest is v0.5.5
+  [OK] Biased Cognition keeps native vertical portrait without second crop
+  [OK] watcher searches only the current scene
+  [OK] watcher tracks encyclopedia exit
+  [OK] watcher strips selectors from pooled cards
+  [OK] selector requires exact library grid ownership
+  [OK] selector requires current-scene ownership
+  [OK] selector cleanup hides before deferred free
+  [OK] recursive selector cleanup exists
+  [OK] card-detail popup uses the real inspect screen instead of unrelated visible cards
+  [OK] selector has an immediate per-node scope guard
+  [OK] transient scope loss hides without disabling or freeing the selector
+  [OK] scope guard restores selector text visibility and input
+  [OK] compiled binary exists: C:\Users\yummn\Documents\Codex\2026-07-12\2-mod-50\.build-artifacts\CardBeautify-v0.5.5\PC\CardBeautify\CardBeautify.dll
+  [OK] compiled binary exists: C:\Users\yummn\Documents\Codex\2026-07-12\2-mod-50\.build-artifacts\CardBeautify-v0.5.5\Mobile\CardBeautify\CardBeautify.dll

@@ -5,6 +5,7 @@ using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Nodes;
 using MegaCrit.Sts2.Core.Nodes.Cards;
 using MegaCrit.Sts2.Core.Nodes.Screens.CardLibrary;
 
@@ -24,10 +25,6 @@ internal static class CardNodePortraitPatch
     private static readonly FieldInfo? AncientPortraitField = typeof(NCard).GetField("_ancientPortrait", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly Dictionary<string, PortraitState> DefaultPortraitStates = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, PortraitState> DefaultAncientPortraitStates = new(StringComparer.OrdinalIgnoreCase);
-    private static ulong _lastScopeScanMsec;
-    private static ulong _lastScopeGridInstanceId;
-    private static bool _lastScopeHasOutsideCard;
-
     [HarmonyPostfix]
     [HarmonyPriority(Priority.Last)]
     [HarmonyPatch(typeof(NCard), "UpdateVisuals")]
@@ -94,9 +91,14 @@ internal static class CardNodePortraitPatch
     private static void InstallOrUpdateSelector(NCard cardNode, string cardKey)
     {
         var existing = cardNode.GetNodeOrNull<Button>(SelectorNodeName);
-        if (!IsSelectorAllowed(cardNode) || CardArtCatalog.GetAvailablePackIds(cardKey).Count == 0)
+        if (CardArtCatalog.GetAvailablePackIds(cardKey).Count == 0)
         {
             RemoveSelector(cardNode);
+            return;
+        }
+        if (!IsSelectorAllowed(cardNode))
+        {
+            HideSelector(existing);
             return;
         }
 
@@ -191,6 +193,8 @@ internal static class CardNodePortraitPatch
             }
         }
 
+        if (IsInspectCardScreenVisible())
+            return false;
         if (library is null || grid is null || !library.IsVisibleInTree() || !grid.IsVisibleInTree())
             return false;
         if (!IsUnderCurrentScene(library))
@@ -199,55 +203,34 @@ internal static class CardNodePortraitPatch
         try
         {
             var ownedGrid = typeof(NCardLibrary).GetField("_grid", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(library);
-            return ReferenceEquals(ownedGrid, grid) && !HasVisibleCardOutsideGrid(grid);
+            return ReferenceEquals(ownedGrid, grid);
         }
         catch { return false; }
     }
 
-    // The encyclopedia detail popup leaves the library grid alive underneath
-    // an enlarged NCard. Hide every grid selector while that popup is visible.
-    private static bool HasVisibleCardOutsideGrid(NCardLibraryGrid grid)
+    private static bool IsInspectCardScreenVisible()
     {
         try
         {
-            var now = Time.GetTicksMsec();
-            var gridId = grid.GetInstanceId();
-            if (_lastScopeGridInstanceId == gridId && now - _lastScopeScanMsec < 100)
-                return _lastScopeHasOutsideCard;
-            if (Engine.GetMainLoop() is not SceneTree tree || tree.Root is null)
-                return false;
-
-            _lastScopeHasOutsideCard = HasVisibleCardOutsideGrid(tree.Root, grid);
-            _lastScopeGridInstanceId = gridId;
-            _lastScopeScanMsec = now;
-            return _lastScopeHasOutsideCard;
+            var inspect = NGame.Instance?.InspectCardScreen;
+            return inspect is CanvasItem item &&
+                   item.IsInsideTree() &&
+                   item.Visible &&
+                   item.IsVisibleInTree();
         }
         catch { return false; }
     }
 
-    private static bool HasVisibleCardOutsideGrid(Node root, NCardLibraryGrid grid)
+    private static void HideSelector(Button? selector)
     {
         try
         {
-            if (ReferenceEquals(root, grid))
-                return false;
-            if (root is NCard card && IsVisibleInTreeStrict(card))
-                return true;
-            foreach (var child in root.GetChildren())
-                if (child is Node childNode && HasVisibleCardOutsideGrid(childNode, grid))
-                    return true;
+            if (selector is null || !GodotObject.IsInstanceValid(selector))
+                return;
+            selector.Visible = false;
+            selector.MouseFilter = Control.MouseFilterEnum.Ignore;
         }
         catch { }
-        return false;
-    }
-
-    private static bool IsVisibleInTreeStrict(Node node)
-    {
-        try
-        {
-            return node is CanvasItem item && item.IsInsideTree() && item.Visible && item.IsVisibleInTree();
-        }
-        catch { return false; }
     }
 
     private static bool IsUnderCurrentScene(Node node)
@@ -305,6 +288,8 @@ internal static class CardNodePortraitPatch
 internal sealed partial class CardBeautifySelectorButton : Button
 {
     private readonly NCard _card;
+    private string _lastCardKey = string.Empty;
+    private bool _lastCardKeyHasArt;
 
     internal CardBeautifySelectorButton(NCard card)
     {
@@ -313,13 +298,37 @@ internal sealed partial class CardBeautifySelectorButton : Button
 
     public override void _Process(double delta)
     {
-        if (!GodotObject.IsInstanceValid(_card) ||
-            !CardNodePortraitPatch.IsSelectorAllowed(_card))
+        if (!GodotObject.IsInstanceValid(_card))
         {
             Visible = false;
             MouseFilter = MouseFilterEnum.Ignore;
-            SetProcess(false);
             QueueFree();
+            return;
         }
+
+        var model = _card.Model;
+        var cardKey = model == null ? string.Empty : CardArtCatalog.GetCardKey(model);
+        if (!string.Equals(cardKey, _lastCardKey, StringComparison.Ordinal))
+        {
+            _lastCardKey = cardKey;
+            _lastCardKeyHasArt = model != null &&
+                                 CardArtCatalog.GetAvailablePackIds(cardKey).Count > 0;
+        }
+        if (model == null ||
+            !_lastCardKeyHasArt ||
+            !CardNodePortraitPatch.IsSelectorAllowed(_card))
+        {
+            // Filters, row reassignment and the inspect-card popup can make the
+            // exact encyclopedia ancestry false for a frame. Keep this control
+            // alive but non-interactive so it restores itself when the grid is
+            // valid again instead of disappearing until the library is rebuilt.
+            Visible = false;
+            MouseFilter = MouseFilterEnum.Ignore;
+            return;
+        }
+
+        Text = CardArtCatalog.GetSelectorText(cardKey);
+        MouseFilter = MouseFilterEnum.Stop;
+        Visible = true;
     }
 }

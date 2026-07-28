@@ -22,8 +22,9 @@ def main() -> int:
     watcher = (PROJECT / "CardBeautifyCode/CardBeautifyLibraryWatcher.cs").read_text(encoding="utf-8")
     manifest = (PROJECT / "CardBeautify.json").read_text(encoding="utf-8")
 
+    selector_guard = patch.split("internal sealed partial class CardBeautifySelectorButton", 1)[-1]
     checks = {
-        "manifest is v0.5.4": '"version": "v0.5.4"' in manifest,
+        "manifest is v0.5.5": '"version": "v0.5.5"' in manifest,
         "Biased Cognition keeps native vertical portrait without second crop": (
             "BiasedCognitionPortraitCrops" not in patch
             and "GetDisplayTexture" not in patch
@@ -37,9 +38,22 @@ def main() -> int:
         "selector requires current-scene ownership": "IsUnderCurrentScene(library)" in patch and "tree.CurrentScene" in patch,
         "selector cleanup hides before deferred free": "selector.Visible = false" in patch and "selector.MouseFilter = Control.MouseFilterEnum.Ignore" in patch,
         "recursive selector cleanup exists": "internal static void CleanupAllSelectors(Node root)" in patch,
-        "card-detail popup invalidates selector scope": "HasVisibleCardOutsideGrid(grid)" in patch and "ReferenceEquals(root, grid)" in patch and "root is NCard card && IsVisibleInTreeStrict(card)" in patch,
+        "card-detail popup uses the real inspect screen instead of unrelated visible cards": (
+            "NGame.Instance?.InspectCardScreen" in patch
+            and "IsInspectCardScreenVisible()" in patch
+            and "HasVisibleCardOutsideGrid" not in patch
+        ),
         "selector has an immediate per-node scope guard": "class CardBeautifySelectorButton" in patch and "public override void _Process(double delta)" in patch and "!CardNodePortraitPatch.IsSelectorAllowed(_card)" in patch,
-        "scope guard disables input before freeing": "MouseFilter = MouseFilterEnum.Ignore" in patch and "SetProcess(false)" in patch and "QueueFree()" in patch,
+        "transient scope loss hides without disabling or freeing the selector": (
+            "MouseFilter = MouseFilterEnum.Ignore" in selector_guard
+            and "SetProcess(false)" not in selector_guard
+            and "valid again instead of disappearing" in selector_guard
+        ),
+        "scope guard restores selector text visibility and input": (
+            "Text = CardArtCatalog.GetSelectorText(cardKey);" in selector_guard
+            and "MouseFilter = MouseFilterEnum.Stop;" in selector_guard
+            and "Visible = true;" in selector_guard
+        ),
     }
     for binary in args.binary:
         checks[f"compiled binary exists: {binary}"] = binary.is_file() and binary.stat().st_size > 20_000
@@ -47,7 +61,7 @@ def main() -> int:
     passed = [name for name, ok in checks.items() if ok]
     failed = [name for name, ok in checks.items() if not ok]
     lines = [
-        "CardBeautify v0.5.4 native-portrait and encyclopedia-scope offline audit",
+        "CardBeautify v0.5.5 encyclopedia-selector lifecycle offline audit",
         f"Timestamp: {dt.datetime.now().astimezone().isoformat(timespec='seconds')}",
         "Mode: source and binary checks only",
         f"Passed: {len(passed)}",
