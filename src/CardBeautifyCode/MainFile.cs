@@ -21,6 +21,6 @@ public partial class MainFile : Node
         new Harmony(ModId).CreateClassProcessor(typeof(CardModelPortraitPatch)).Patch();
         CardBeautifyLibraryWatcher.Install();
         CardArtCatalog.LogCoverage();
-        Logger.Info("[CardBeautify] loaded v0.5.2: every selector self-removes immediately when its pooled card leaves the exact encyclopedia grid; selected art persists across launches.");
+        Logger.Info("[CardBeautify] loaded v0.5.3: Biased Cognition uses a cached upper-composition portrait crop; encyclopedia selector scope and per-card selections remain preserved.");
     }
 }

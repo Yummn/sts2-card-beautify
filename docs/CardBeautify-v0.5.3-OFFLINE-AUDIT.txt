@@ -1,0 +1,22 @@
+CardBeautify v0.5.3 portrait-crop and encyclopedia-scope offline audit
+Timestamp: 2026-07-28T09:28:28+08:00
+Mode: source and binary checks only
+Passed: 15
+Failed: 0
+
+PASS
+  [OK] manifest is v0.5.3
+  [OK] Biased Cognition has a dedicated cached crop
+  [OK] Biased Cognition crop keeps a landscape composition
+  [OK] watcher searches only the current scene
+  [OK] watcher tracks encyclopedia exit
+  [OK] watcher strips selectors from pooled cards
+  [OK] selector requires exact library grid ownership
+  [OK] selector requires current-scene ownership
+  [OK] selector cleanup hides before deferred free
+  [OK] recursive selector cleanup exists
+  [OK] card-detail popup invalidates selector scope
+  [OK] selector has an immediate per-node scope guard
+  [OK] scope guard disables input before freeing
+  [OK] compiled binary exists: .build-artifacts\CardBeautify-v0.5.3\Mobile\CardBeautify.dll
+  [OK] compiled binary exists: .build-artifacts\CardBeautify-v0.5.3\PC\CardBeautify.dll
