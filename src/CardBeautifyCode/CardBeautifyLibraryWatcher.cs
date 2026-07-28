@@ -1,4 +1,5 @@
 using Godot;
+using MegaCrit.Sts2.Core.Nodes;
 using MegaCrit.Sts2.Core.Nodes.Cards;
 using MegaCrit.Sts2.Core.Nodes.Cards.Holders;
 using MegaCrit.Sts2.Core.Nodes.Screens.CardLibrary;
@@ -9,10 +10,12 @@ namespace CardBeautify;
 internal sealed partial class CardBeautifyLibraryWatcher : Node
 {
     private const double PollInterval = 0.45;
+    private const double InspectPollInterval = 0.08;
     private static CardBeautifyLibraryWatcher? _instance;
     private static readonly FieldInfo? LibraryGridField = typeof(NCardLibrary).GetField("_grid", BindingFlags.Instance | BindingFlags.NonPublic);
     private static readonly FieldInfo? CardRowsField = typeof(NCardGrid).GetField("_cardRows", BindingFlags.Instance | BindingFlags.NonPublic);
     private double _elapsed;
+    private double _inspectElapsed;
     private NCardLibrary? _library;
     private bool _loggedVisibleLibrary;
     private bool _wasInLibrary;
@@ -27,6 +30,13 @@ internal sealed partial class CardBeautifyLibraryWatcher : Node
 
     public override void _Process(double delta)
     {
+        _inspectElapsed += delta;
+        if (_inspectElapsed >= InspectPollInterval)
+        {
+            _inspectElapsed = 0;
+            RepairVisibleInspectCard();
+        }
+
         _elapsed += delta;
         if (_elapsed < PollInterval) return;
         _elapsed = 0;
@@ -56,6 +66,34 @@ internal sealed partial class CardBeautifyLibraryWatcher : Node
         {
             _loggedVisibleLibrary = true;
             MainFile.Logger.Info($"[CardBeautify] encyclopedia watcher active: cards={stats.Cards}, eligible={stats.Eligible}, selectors={stats.Selectors}.");
+        }
+    }
+
+    private static void RepairVisibleInspectCard()
+    {
+        try
+        {
+            var inspect = NGame.Instance?.InspectCardScreen;
+            if (inspect is not CanvasItem item ||
+                !item.IsInsideTree() ||
+                !item.Visible ||
+                !item.IsVisibleInTree())
+                return;
+
+            var card = inspect.GetNodeOrNull<NCard>("Card");
+            if (!GodotObject.IsInstanceValid(card) ||
+                card?.Model == null ||
+                CardNodePortraitPatch.HasExpectedReplacementPresentation(card))
+                return;
+
+            CardNodePortraitPatch.ApplyToCard(card);
+            MainFile.Logger.Info(
+                $"[CardBeautify] repaired inspect-card portrait presentation: " +
+                $"{CardArtCatalog.GetCardKey(card.Model)}; stretch=KeepAspectCovered.");
+        }
+        catch (System.Exception ex)
+        {
+            MainFile.Logger.Warn($"[CardBeautify] inspect-card portrait repair failed: {ex.Message}");
         }
     }
 

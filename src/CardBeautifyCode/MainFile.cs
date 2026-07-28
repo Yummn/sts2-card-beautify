@@ -21,6 +21,6 @@ public partial class MainFile : Node
         new Harmony(ModId).CreateClassProcessor(typeof(CardModelPortraitPatch)).Patch();
         CardBeautifyLibraryWatcher.Install();
         CardArtCatalog.LogCoverage();
-        Logger.Info("[CardBeautify] loaded v0.5.5: encyclopedia card-art selectors survive filter, row and inspect-popup transitions while remaining hidden outside the exact library grid.");
+        Logger.Info("[CardBeautify] loaded v0.5.6: inspect-card portraits are re-normalized after display rebuilds; encyclopedia selectors remain scoped to the exact library grid.");
     }
 }

@@ -24,7 +24,7 @@ def main() -> int:
 
     selector_guard = patch.split("internal sealed partial class CardBeautifySelectorButton", 1)[-1]
     checks = {
-        "manifest is v0.5.5": '"version": "v0.5.5"' in manifest,
+        "manifest is v0.5.6": '"version": "v0.5.6"' in manifest,
         "Biased Cognition keeps native vertical portrait without second crop": (
             "BiasedCognitionPortraitCrops" not in patch
             and "GetDisplayTexture" not in patch
@@ -42,6 +42,16 @@ def main() -> int:
             "NGame.Instance?.InspectCardScreen" in patch
             and "IsInspectCardScreenVisible()" in patch
             and "HasVisibleCardOutsideGrid" not in patch
+        ),
+        "inspect-card portrait is repaired without an Android NCard detour": (
+            "RepairVisibleInspectCard()" in watcher
+            and 'inspect.GetNodeOrNull<NCard>("Card")' in watcher
+            and "HasExpectedReplacementPresentation(card)" in watcher
+            and "CardNodePortraitPatch.ApplyToCard(card);" in watcher
+            and "InspectPollInterval = 0.08" in watcher
+            and "stretch=KeepAspectCovered" in watcher
+            and "HasExpectedReplacementPresentation(NCard cardNode)" in patch
+            and "rect.StretchMode == (TextureRect.StretchModeEnum)6" in patch
         ),
         "selector has an immediate per-node scope guard": "class CardBeautifySelectorButton" in patch and "public override void _Process(double delta)" in patch and "!CardNodePortraitPatch.IsSelectorAllowed(_card)" in patch,
         "transient scope loss hides without disabling or freeing the selector": (
@@ -61,7 +71,7 @@ def main() -> int:
     passed = [name for name, ok in checks.items() if ok]
     failed = [name for name, ok in checks.items() if not ok]
     lines = [
-        "CardBeautify v0.5.5 encyclopedia-selector lifecycle offline audit",
+        "CardBeautify v0.5.6 portrait and encyclopedia-selector lifecycle offline audit",
         f"Timestamp: {dt.datetime.now().astimezone().isoformat(timespec='seconds')}",
         "Mode: source and binary checks only",
         f"Passed: {len(passed)}",

@@ -62,6 +62,27 @@ internal static class CardNodePortraitPatch
         InstallOrUpdateSelector(cardNode, cardKey);
     }
 
+    internal static bool HasExpectedReplacementPresentation(NCard cardNode)
+    {
+        try
+        {
+            var model = cardNode.Model;
+            if (model == null) return true;
+
+            var texture = CardArtCatalog.GetTextureForCard(CardArtCatalog.GetCardKey(model));
+            if (texture == null) return true;
+
+            var rect = PortraitField?.GetValue(cardNode) as TextureRect;
+            return rect != null &&
+                   ReferenceEquals(rect.Texture, texture) &&
+                   rect.StretchMode == (TextureRect.StretchModeEnum)6;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static void ApplyTexture(TextureRect? rect, Texture2D texture)
     {
         if (rect == null) return;
