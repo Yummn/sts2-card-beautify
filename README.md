@@ -20,7 +20,7 @@
 
 ## 安装
 
-下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `CardBeautify-v0.5.6-Mobile-v103.zip`，PC v107.1 使用 `CardBeautify-v0.5.6-PC-v107.1.zip`。
+下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `卡面美化-v0.5.6-手机-v103.zip`，PC v107.1 使用 `卡面美化-v0.5.6-电脑-v107.1.zip`。
 
 ## 资源来源
 

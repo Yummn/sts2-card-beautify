@@ -12,8 +12,8 @@
 
 下载：
 
-- `CardBeautify-v0.5.5-Mobile-v103.zip`：Android v0.103.2
-- `CardBeautify-v0.5.5-PC-v107.1.zip`：PC v0.107.1
+- `卡面美化-v0.5.5-手机-v103.zip`：Android v0.103.2
+- `卡面美化-v0.5.5-电脑-v107.1.zip`：PC v0.107.1
 
 SHA256：
 
