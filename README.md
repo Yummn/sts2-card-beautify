@@ -4,6 +4,8 @@
 
 ## 最新版本
 
+- [v0.5.7](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.7)：修复“冰之长枪”和“偏差认知”的卡图焦点裁剪。两张卡现在会把替换资源预先裁成卡框比例并缓存：冰之长枪优先保留上沿人物与冰枪，偏差认知保留摆锤、头发和面部；宽高比本来正确的资源不会二次裁剪。该结果由百科网格、详情页和局内卡牌共用，避免不同界面再次采用不同的居中切片。REDMI K80 Pro / Android v110.1 已实机验证两张卡详情页，并恢复原有逐卡卡图选择。
+
 - [v0.5.6](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.6)：修复“偏差认知”在百科大全详情页中被按完整竖图等比缩小、左右出现黑边的错误裁剪。详情弹窗重建卡牌节点后，现在会把替换立绘重新规范为与百科网格一致的 `KeepAspectCovered`；不启用 Android 上不稳定的 NCard Harmony detour，也不改变局内卡牌按钮作用域。REDMI K80 Pro / Android v103 实机确认详情页完整填充卡框，日志记录 `biased_cognition; stretch=KeepAspectCovered`；双平台离线检查 16/16 通过。
 
 - [v0.5.5](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.5)：修复百科大全切换人物/筛选、重建卡牌行或从卡牌详情返回后，“卡图”按钮偶尔消失的问题。旧版在这些过渡帧里把暂时失去精确网格作用域的按钮直接释放；现在改为同步隐藏并禁用触控，网格恢复有效后由按钮自身立即重新显示。详情页和百科之外仍不会显示按钮。PC v107.1 已实机验证故障机器人筛选、详情隐藏和返回后约 250 ms 自动恢复；双平台离线检查 15/15 通过。
@@ -20,7 +22,7 @@
 
 ## 安装
 
-下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `卡面美化-v0.5.6-手机-v103.zip`，PC v107.1 使用 `卡面美化-v0.5.6-电脑-v107.1.zip`。
+下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `卡面美化-v0.5.7-手机-v103.zip`，Android v110.1 使用 `卡面美化-v0.5.7-手机-v110.1.zip`，PC v107.1 使用 `卡面美化-v0.5.7-电脑-v107.1.zip`。
 
 ## 资源来源
 

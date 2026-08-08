@@ -25,6 +25,7 @@ internal static class CardNodePortraitPatch
     private static readonly FieldInfo? AncientPortraitField = typeof(NCard).GetField("_ancientPortrait", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly Dictionary<string, PortraitState> DefaultPortraitStates = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, PortraitState> DefaultAncientPortraitStates = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<(string CardKey, ulong TextureId), Texture2D> FramedPortraitTextures = new();
     [HarmonyPostfix]
     [HarmonyPriority(Priority.Last)]
     [HarmonyPatch(typeof(NCard), "UpdateVisuals")]
@@ -55,8 +56,9 @@ internal static class CardNodePortraitPatch
         }
         else
         {
-            ApplyTexture(rect, texture);
-            ApplyTexture(ancientRect, texture);
+            var displayTexture = GetDisplayTexture(cardKey, texture);
+            ApplyTexture(rect, displayTexture);
+            ApplyTexture(ancientRect, displayTexture);
         }
 
         InstallOrUpdateSelector(cardNode, cardKey);
@@ -69,18 +71,78 @@ internal static class CardNodePortraitPatch
             var model = cardNode.Model;
             if (model == null) return true;
 
-            var texture = CardArtCatalog.GetTextureForCard(CardArtCatalog.GetCardKey(model));
+            var cardKey = CardArtCatalog.GetCardKey(model);
+            var texture = CardArtCatalog.GetTextureForCard(cardKey);
             if (texture == null) return true;
+            var displayTexture = GetDisplayTexture(cardKey, texture);
 
             var rect = PortraitField?.GetValue(cardNode) as TextureRect;
             return rect != null &&
-                   ReferenceEquals(rect.Texture, texture) &&
+                   ReferenceEquals(rect.Texture, displayTexture) &&
                    rect.StretchMode == (TextureRect.StretchModeEnum)6;
         }
         catch
         {
             return false;
         }
+    }
+
+    internal static Texture2D GetDisplayTexture(string cardKey, Texture2D texture)
+    {
+        if (!string.Equals(cardKey, "biased_cognition", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(cardKey, "ice_lance", StringComparison.OrdinalIgnoreCase))
+            return texture;
+
+        var width = texture.GetWidth();
+        var height = texture.GetHeight();
+        if (width <= 0 || height <= 0)
+            return texture;
+
+        const float frameAspect = 1.5f;
+        var sourceAspect = width / (float)height;
+        if (MathF.Abs(sourceAspect - frameAspect) < 0.01f)
+            return texture;
+
+        var cacheKey = (cardKey.ToLowerInvariant(), texture.GetInstanceId());
+        if (FramedPortraitTextures.TryGetValue(cacheKey, out var cached) &&
+            GodotObject.IsInstanceValid(cached))
+            return cached;
+
+        float left;
+        float top;
+        float cropWidth;
+        float cropHeight;
+        if (sourceAspect < frameAspect)
+        {
+            cropWidth = width;
+            cropHeight = width / frameAspect;
+            left = 0f;
+
+            // Biased Cognition's replacement portraits are tall illustrations.
+            // Their focal point is above the geometric centre, so a normal
+            // KeepAspectCovered slice cuts off the hair and pendulum. Ice Lance
+            // also places its character at the top edge; anchor that crop there.
+            var remaining = MathF.Max(0f, height - cropHeight);
+            top = string.Equals(cardKey, "biased_cognition", StringComparison.OrdinalIgnoreCase)
+                ? MathF.Min(remaining, height * 0.189f)
+                : 0f;
+        }
+        else
+        {
+            cropHeight = height;
+            cropWidth = height * frameAspect;
+            left = MathF.Max(0f, (width - cropWidth) * 0.5f);
+            top = 0f;
+        }
+
+        var framed = new AtlasTexture
+        {
+            Atlas = texture,
+            Region = new Rect2(left, top, cropWidth, cropHeight),
+            FilterClip = true,
+        };
+        FramedPortraitTextures[cacheKey] = framed;
+        return framed;
     }
 
     private static void ApplyTexture(TextureRect? rect, Texture2D texture)
