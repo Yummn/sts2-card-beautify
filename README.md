@@ -1,37 +1,43 @@
 # CardBeautify / 卡面美化
 
-《Slay the Spire 2 / 杀戮尖塔2》卡牌立绘替换 MOD，提供适合手机触控的百科大全卡面切换按钮，并持久保存每张卡上次选择的卡面。
+> 项目分类：个人项目 / 《杀戮尖塔 2》Mod / 卡面替换工具 / 可直接使用
 
-## 最新版本
+用于替换《Slay the Spire 2 / 杀戮尖塔 2》的卡牌立绘，并在百科大全中提供适合手机触控的卡面切换按钮。每张卡最后选择的卡面会持久保存。
 
-- [v0.5.7](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.7)：修复“冰之长枪”和“偏差认知”的卡图焦点裁剪。两张卡现在会把替换资源预先裁成卡框比例并缓存：冰之长枪优先保留上沿人物与冰枪，偏差认知保留摆锤、头发和面部；宽高比本来正确的资源不会二次裁剪。该结果由百科网格、详情页和局内卡牌共用，避免不同界面再次采用不同的居中切片。REDMI K80 Pro / Android v110.1 已实机验证两张卡详情页，并恢复原有逐卡卡图选择。
+## 下载与安装
 
-- [v0.5.6](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.6)：修复“偏差认知”在百科大全详情页中被按完整竖图等比缩小、左右出现黑边的错误裁剪。详情弹窗重建卡牌节点后，现在会把替换立绘重新规范为与百科网格一致的 `KeepAspectCovered`；不启用 Android 上不稳定的 NCard Harmony detour，也不改变局内卡牌按钮作用域。REDMI K80 Pro / Android v103 实机确认详情页完整填充卡框，日志记录 `biased_cognition; stretch=KeepAspectCovered`；双平台离线检查 16/16 通过。
+1. 打开 [Releases](https://github.com/Yummn/sts2-card-beautify/releases)。
+2. 下载与游戏平台和版本一致的 ZIP。
+3. 解压后，将 `CardBeautify` 文件夹完整复制到游戏 `mods/` 目录。
 
-- [v0.5.5](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.5)：修复百科大全切换人物/筛选、重建卡牌行或从卡牌详情返回后，“卡图”按钮偶尔消失的问题。旧版在这些过渡帧里把暂时失去精确网格作用域的按钮直接释放；现在改为同步隐藏并禁用触控，网格恢复有效后由按钮自身立即重新显示。详情页和百科之外仍不会显示按钮。PC v107.1 已实机验证故障机器人筛选、详情隐藏和返回后约 250 ms 自动恢复；双平台离线检查 15/15 通过。
+当前 `v0.5.7` 提供：
 
-- [v0.5.4](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.4)：再次检查“偏差认知”后确认，v0.5.3 把本来已经正确的 600×848 竖版原图先裁成 600×400 横图，随后卡牌控件又以 `KeepAspectCovered` 填充，形成二次放大与裁切。v0.5.4 移除这层单卡横向裁剪，直接使用原始竖版构图。PC v107.1 已在百科大全缩略图和卡牌详情中实机验证：摆锤、完整头发、面部、披肩与上半身均正常进入画面，日志确认加载 `v0.5.4`。
+- Android v0.103.x：`卡面美化-v0.5.7-手机-v103.zip`
+- Android v0.110.1：`卡面美化-v0.5.7-手机-v110.1.zip`
+- PC v0.107.1：`卡面美化-v0.5.7-电脑-v107.1.zip`
 
-- [v0.5.3](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.3)：修复“偏差认知”替换卡图在横向卡牌立绘窗口中被居中裁掉头顶的问题。现在仅对这张卡使用带缓存的上部横向构图裁剪，保留摆锤、头发和面部；不会改变其他卡图，也不会增加每帧重复裁剪开销。Android v103 已在百科大全中实机验证。
+不同版本的 DLL 不可混用。
 
-- [v0.5.2](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.2)：修复先打开百科大全、再进入战斗后卡牌上仍显示“卡图”按钮的问题。每个按钮现在带有自身作用域守卫：卡牌节点一旦离开当前百科大全的精确网格，首帧就先隐藏并关闭触控，再释放按钮，不再依赖较慢的全局轮询清理。REDMI K80 Pro 实测百科内按钮正常显示，返回主菜单并继续战斗后按钮完全消失；离线检查 12/12 通过。
+## 使用
 
-- [v0.5.1](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.1)：百科大全卡牌详情弹窗打开时隐藏卡图按钮，并保持每张卡的卡面选择持久化。
+进入百科大全后，支持替换卡图的卡牌会显示“卡图”按钮。切换后会保存该卡的选择，并在百科、详情页和局内卡牌中复用。
 
-- [v0.5.0](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.5.0)：修复打开百科大全后，卡面按钮随复用卡牌节点泄漏到战斗、商店、牌组和牌堆界面的问题。按钮现在只允许出现在当前场景中实际拥有的百科卡牌网格内；离开百科时先同步隐藏再释放。卡图替换本身仍在所有界面生效，已保存选择不会丢失。
+按钮只在百科大全对应卡牌网格中显示，不会进入战斗、商店、牌组等其他界面。
 
-## 安装
+## 当前版本
 
-下载 Release 中带平台标记的安装包，解压后将 `CardBeautify` 文件夹放入游戏 `mods/` 目录。Android v103 使用 `卡面美化-v0.5.7-手机-v103.zip`，Android v110.1 使用 `卡面美化-v0.5.7-手机-v110.1.zip`，PC v107.1 使用 `卡面美化-v0.5.7-电脑-v107.1.zip`。
+当前版本：`v0.5.7`
+
+本版本主要修复“冰之长枪”和“偏差认知”的替换图焦点裁剪，使百科网格、详情页与局内卡牌共用一致的裁剪结果。Android v0.110.1 已完成实机验证。
+
+更早版本的按钮作用域、详情页显示与裁剪修复记录见：
+
+- [GitHub Releases](https://github.com/Yummn/sts2-card-beautify/releases)
 
 ## 资源来源
 
-资源原名和来源见 [`docs/README-CardBeautify-资源来源.md`](docs/README-CardBeautify-资源来源.md)。仓库只保存代码和说明，大体积资源放在 Release 安装包中。
+资源原名和来源记录在：
 
-## 历史版本
+- [`docs/README-CardBeautify-资源来源.md`](docs/README-CardBeautify-资源来源.md)
 
-- [v0.4.9](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.4.9)
-- [v0.4.8](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.4.8)
-- [v0.4.7](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.4.7)
-- [v0.4.6](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.4.6)
-- [v0.4.2-Mobile-v103](https://github.com/Yummn/sts2-card-beautify/releases/tag/v0.4.2-Mobile-v103)
+仓库主要保存代码和说明，大体积卡图资源放在 Release 安装包中。
