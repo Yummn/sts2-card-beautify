@@ -9,8 +9,10 @@
 
 ### v0.5.8：修复冰之长枪与偏差认知插图顶部留空
 
-- [手机 v0.113.0（编译与 API 检查通过，未实机测试）](https://github.com/Yummn/sts2-card-beautify/releases/download/v0.5.8/CardBeautify-0.5.8-Android-v113.0.zip)
-- [电脑 v0.113.1（游戏渲染回归通过）](https://github.com/Yummn/sts2-card-beautify/releases/download/v0.5.8/CardBeautify-0.5.8-PC-v113.1.zip)
+- [手机 v0.113.0（编译与 API 检查通过，未实机测试）](https://github.com/Yummn/sts2-card-beautify/releases/download/v0.5.8/CardBeautify-0.5.8-Android-v113.0-Update.zip)
+- [电脑 v0.113.1（游戏渲染回归通过）](https://github.com/Yummn/sts2-card-beautify/releases/download/v0.5.8/CardBeautify-0.5.8-PC-v113.1-Update.zip)
+
+GitHub 附件为覆盖升级包，需要保留已安装的 CardBeautifyAssets.pck 和 Data 目录。初次安装可先下载对应平台的 v0.5.7 完整包，再用此包中的同名文件覆盖；也可直接使用本地发布目录中的 v0.5.8 完整安装包。
 
 以上只是本轮构建目标，其他游戏版本请查看相应历史发布；不能混装手机和电脑版。旧文档中的版本号、源码附件指引如与本节冲突，以本节及对应Release说明为准。
 
