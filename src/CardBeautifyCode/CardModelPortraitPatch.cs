@@ -1,5 +1,6 @@
 ﻿using Godot;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Models;
 
 namespace CardBeautify;
@@ -11,6 +12,7 @@ internal static class CardModelPortraitPatch
     {
         var cardKey = CardArtCatalog.GetCardKey(__instance);
         var texture = CardArtCatalog.GetTextureForCard(cardKey);
-        if (texture != null) __result = CardNodePortraitPatch.GetDisplayTexture(cardKey, texture);
+        if (texture != null)
+            __result = CardNodePortraitPatch.GetDisplayTexture(cardKey, texture, __instance.Rarity == CardRarity.Ancient);
     }
 }

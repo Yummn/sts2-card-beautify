@@ -24,12 +24,11 @@ def main() -> int:
 
     selector_guard = patch.split("internal sealed partial class CardBeautifySelectorButton", 1)[-1]
     checks = {
-        "manifest is v0.5.6": '"version": "v0.5.6"' in manifest,
-        "Biased Cognition keeps native vertical portrait without second crop": (
-            "BiasedCognitionPortraitCrops" not in patch
-            and "GetDisplayTexture" not in patch
-            and "new AtlasTexture" not in patch
-            and "ApplyTexture(rect, texture);" in patch
+        "manifest is v0.5.8": '"version": "v0.5.8"' in manifest,
+        "replacement crop targets native normal and Ancient rectangles": (
+            "598f / 842f : 250f / 190f" in patch
+            and "TextureId, bool Ancient" in patch
+            and "ancient ? ancientRect : rect" in patch
         ),
         "watcher searches only the current scene": "FindVisibleLibrary(tree?.CurrentScene)" in watcher and "FindVisibleLibrary(GetTree()?.Root)" not in watcher,
         "watcher tracks encyclopedia exit": "_wasInLibrary" in watcher,
@@ -51,7 +50,7 @@ def main() -> int:
             and "InspectPollInterval = 0.08" in watcher
             and "stretch=KeepAspectCovered" in watcher
             and "HasExpectedReplacementPresentation(NCard cardNode)" in patch
-            and "rect.StretchMode == (TextureRect.StretchModeEnum)6" in patch
+            and "rect.StretchMode == TextureRect.StretchModeEnum.KeepAspectCovered" in patch
         ),
         "selector has an immediate per-node scope guard": "class CardBeautifySelectorButton" in patch and "public override void _Process(double delta)" in patch and "!CardNodePortraitPatch.IsSelectorAllowed(_card)" in patch,
         "transient scope loss hides without disabling or freeing the selector": (
@@ -71,7 +70,7 @@ def main() -> int:
     passed = [name for name, ok in checks.items() if ok]
     failed = [name for name, ok in checks.items() if not ok]
     lines = [
-        "CardBeautify v0.5.6 portrait and encyclopedia-selector lifecycle offline audit",
+        "CardBeautify v0.5.8 portrait and encyclopedia-selector lifecycle offline audit",
         f"Timestamp: {dt.datetime.now().astimezone().isoformat(timespec='seconds')}",
         "Mode: source and binary checks only",
         f"Passed: {len(passed)}",

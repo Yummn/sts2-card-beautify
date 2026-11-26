@@ -81,7 +81,11 @@ internal static class CardArtCatalog
         LogBetterDefectPortraitFolder();
     }
 
-    public static string GetCardKey(CardModel model) => ToSnakeCase(model.GetType().Name);
+    public static string GetCardKey(CardModel model)
+    {
+        var key = ToSnakeCase(model.GetType().Name);
+        return key == "bd_reworked_biased_cognition" ? "biased_cognition" : key;
+    }
 
     public static Texture2D? GetTextureForCard(string cardKey)
     {
@@ -190,6 +194,9 @@ internal static class CardArtCatalog
     public static bool IsReplacementTexture(Texture2D? texture)
     {
         EnsureManifestLoaded();
+        // Focal crops are views onto replacement textures, not vanilla art.
+        while (texture is AtlasTexture { Atlas: { } atlas })
+            texture = atlas;
         var path = texture?.ResourcePath?.Trim();
         return !string.IsNullOrWhiteSpace(path) && ReplacementResourcePaths.Contains(path);
     }
@@ -225,7 +232,6 @@ internal static class CardArtCatalog
         if (string.IsNullOrWhiteSpace(next)) PerCardSelections.Remove(cardKey);
         else PerCardSelections[cardKey] = next;
 
-        TextureCache.Clear();
         SaveSelections();
         MainFile.Logger.Info("[CardBeautify] " + cardKey + " art source: " + (next ?? "Auto"));
     }

@@ -25,7 +25,8 @@ internal static class CardNodePortraitPatch
     private static readonly FieldInfo? AncientPortraitField = typeof(NCard).GetField("_ancientPortrait", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly Dictionary<string, PortraitState> DefaultPortraitStates = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, PortraitState> DefaultAncientPortraitStates = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<(string CardKey, ulong TextureId), Texture2D> FramedPortraitTextures = new();
+    private static readonly Dictionary<(string CardKey, ulong TextureId, bool Ancient), Texture2D> FramedPortraitTextures = new();
+    private static readonly MethodInfo? UpdatePortraitBlur = AccessTools.Method(typeof(NCard), "UpdatePortraitBlurParams");
     [HarmonyPostfix]
     [HarmonyPriority(Priority.Last)]
     [HarmonyPatch(typeof(NCard), "UpdateVisuals")]
@@ -56,9 +57,10 @@ internal static class CardNodePortraitPatch
         }
         else
         {
-            var displayTexture = GetDisplayTexture(cardKey, texture);
-            ApplyTexture(rect, displayTexture);
-            ApplyTexture(ancientRect, displayTexture);
+            var ancient = model.Rarity == CardRarity.Ancient;
+            var displayTexture = GetDisplayTexture(cardKey, texture, ancient);
+            if (ApplyTexture(ancient ? ancientRect : rect, displayTexture))
+                UpdatePortraitBlur?.Invoke(cardNode, null);
         }
 
         InstallOrUpdateSelector(cardNode, cardKey);
@@ -74,12 +76,12 @@ internal static class CardNodePortraitPatch
             var cardKey = CardArtCatalog.GetCardKey(model);
             var texture = CardArtCatalog.GetTextureForCard(cardKey);
             if (texture == null) return true;
-            var displayTexture = GetDisplayTexture(cardKey, texture);
-
-            var rect = PortraitField?.GetValue(cardNode) as TextureRect;
+            var ancient = model.Rarity == CardRarity.Ancient;
+            var displayTexture = GetDisplayTexture(cardKey, texture, ancient);
+            var rect = (ancient ? AncientPortraitField : PortraitField)?.GetValue(cardNode) as TextureRect;
             return rect != null &&
                    ReferenceEquals(rect.Texture, displayTexture) &&
-                   rect.StretchMode == (TextureRect.StretchModeEnum)6;
+                   rect.StretchMode == TextureRect.StretchModeEnum.KeepAspectCovered;
         }
         catch
         {
@@ -87,7 +89,7 @@ internal static class CardNodePortraitPatch
         }
     }
 
-    internal static Texture2D GetDisplayTexture(string cardKey, Texture2D texture)
+    internal static Texture2D GetDisplayTexture(string cardKey, Texture2D texture, bool ancient)
     {
         if (!string.Equals(cardKey, "biased_cognition", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(cardKey, "ice_lance", StringComparison.OrdinalIgnoreCase))
@@ -98,42 +100,25 @@ internal static class CardNodePortraitPatch
         if (width <= 0 || height <= 0)
             return texture;
 
-        const float frameAspect = 1.5f;
-        var sourceAspect = width / (float)height;
-        if (MathF.Abs(sourceAspect - frameAspect) < 0.01f)
+        // Use the native portrait rectangle, not the outer card frame. Gameplay
+        // uses KeepAspectCentered for normal cards and Scale on the full-art
+        // Ancient rect. A 3:2 texture leaves a strip in the former and stretches
+        // in the latter. Bias the crop upwards without adding transparent space.
+        var frameAspect = ancient ? 598f / 842f : 250f / 190f;
+        int cropWidth = Math.Min(width, Math.Max(1, (int)MathF.Round(height * frameAspect)));
+        int cropHeight = Math.Min(height, Math.Max(1, (int)MathF.Round(width / frameAspect)));
+        if (cropWidth == width && cropHeight == height)
             return texture;
 
-        var cacheKey = (cardKey.ToLowerInvariant(), texture.GetInstanceId());
+        var cacheKey = (cardKey, texture.GetInstanceId(), ancient);
         if (FramedPortraitTextures.TryGetValue(cacheKey, out var cached) &&
             GodotObject.IsInstanceValid(cached))
             return cached;
 
-        float left;
-        float top;
-        float cropWidth;
-        float cropHeight;
-        if (sourceAspect < frameAspect)
-        {
-            cropWidth = width;
-            cropHeight = width / frameAspect;
-            left = 0f;
-
-            // Biased Cognition's replacement portraits are tall illustrations.
-            // Their focal point is above the geometric centre, so a normal
-            // KeepAspectCovered slice cuts off the hair and pendulum. Ice Lance
-            // also places its character at the top edge; anchor that crop there.
-            var remaining = MathF.Max(0f, height - cropHeight);
-            top = string.Equals(cardKey, "biased_cognition", StringComparison.OrdinalIgnoreCase)
-                ? MathF.Min(remaining, height * 0.189f)
-                : 0f;
-        }
-        else
-        {
-            cropHeight = height;
-            cropWidth = height * frameAspect;
-            left = MathF.Max(0f, (width - cropWidth) * 0.5f);
-            top = 0f;
-        }
+        int left = (width - cropWidth) / 2;
+        int top = !ancient && string.Equals(cardKey, "biased_cognition", StringComparison.OrdinalIgnoreCase)
+            ? Math.Min(height - cropHeight, (int)MathF.Round(height * 0.189f))
+            : 0;
 
         var framed = new AtlasTexture
         {
@@ -145,17 +130,21 @@ internal static class CardNodePortraitPatch
         return framed;
     }
 
-    private static void ApplyTexture(TextureRect? rect, Texture2D texture)
+    private static bool ApplyTexture(TextureRect? rect, Texture2D texture)
     {
-        if (rect == null) return;
+        if (rect == null ||
+            (ReferenceEquals(rect.Texture, texture) && rect.StretchMode == TextureRect.StretchModeEnum.KeepAspectCovered))
+            return false;
         rect.Texture = texture;
-        rect.StretchMode = (TextureRect.StretchModeEnum)6;
+        rect.StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered;
         rect.QueueRedraw();
+        return true;
     }
 
     private static void RememberDefaultState(string cardKey, TextureRect? rect, Dictionary<string, PortraitState> cache)
     {
-        if (!string.IsNullOrWhiteSpace(cardKey) && rect != null && !cache.ContainsKey(cardKey) && !CardArtCatalog.IsReplacementTexture(rect.Texture))
+        if (!string.IsNullOrWhiteSpace(cardKey) && rect?.Texture is { } texture &&
+            !cache.ContainsKey(cardKey) && !CardArtCatalog.IsReplacementTexture(texture))
         {
             cache[cardKey] = new PortraitState { Texture = rect.Texture, StretchMode = rect.StretchMode };
         }

@@ -21,6 +21,6 @@ public partial class MainFile : Node
         new Harmony(ModId).CreateClassProcessor(typeof(CardModelPortraitPatch)).Patch();
         CardBeautifyLibraryWatcher.Install();
         CardArtCatalog.LogCoverage();
-        Logger.Info("[CardBeautify] loaded v0.5.7: Ice Lance and Biased Cognition use cached focal crops matching the card-art frame; encyclopedia selectors remain scoped to the exact library grid.");
+        Logger.Info("[CardBeautify] loaded v0.5.8: Ice Lance and Biased Cognition fill the native normal and Ancient portrait frames.");
     }
 }
